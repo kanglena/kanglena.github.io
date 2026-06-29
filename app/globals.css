@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f2f1ea;
+  --card: #fbfaf6;
+  --ink: #1a1a15;
+  --muted: #7a786e;
+  --line: rgba(26, 26, 21, 0.12);
+  --accent: #10864b;
+  --accent2: #16c172;
+  --accent-soft: rgba(16, 134, 75, 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  color-scheme: light only;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-space), "Space Grotesk", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #10864b;
+  color: #fff;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+@keyframes dotpulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 134, 75, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(16, 134, 75, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 134, 75, 0); }
+}
+
+/* hover states (ported from the design's style-hover) */
+.lp-navlink { transition: color 0.2s; }
+.lp-navlink:hover { color: var(--ink); }
+.lp-langbtn { transition: all 0.2s; }
+.lp-langbtn:hover { border-color: var(--accent); color: var(--accent); }
+.lp-proj { transition: box-shadow 0.3s ease, border-color 0.3s ease; }
+.lp-proj:hover { box-shadow: 0 26px 64px rgba(26, 26, 21, 0.1); border-color: rgba(16, 134, 75, 0.45); }
+.lp-link { transition: color 0.2s, border-color 0.2s; }
+.lp-link:hover { color: var(--accent); border-color: var(--accent); }
+.lp-copy { transition: all 0.2s; }
+.lp-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+  html { scroll-behavior: auto; }
 }
