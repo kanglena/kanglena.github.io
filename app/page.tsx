@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { getContent } from "@/lib/content";
+import ContentCard from "@/components/ContentCard";
 
 export default function Home() {
+  const recentProjects = getContent("projects").slice(0, 2);
   return (
     <div className="flex flex-col gap-6">
       <p className="text-[15px]" style={{ lineHeight: 1.6 }}>
@@ -23,7 +26,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 최근 작업·글: Task 5 이후 연결. 0개면 섹션 숨김 */}
+      {recentProjects.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <span className="text-[14px] font-medium">최근 작업</span>
+            <a href="/projects" className="text-[12px] underline">전체 보기 →</a>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {recentProjects.map((d) => <ContentCard key={d.slug} doc={d} basePath="/projects" />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
