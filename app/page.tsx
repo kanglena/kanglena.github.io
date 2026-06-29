@@ -4,6 +4,7 @@ import ContentCard from "@/components/ContentCard";
 
 export default function Home() {
   const recentProjects = getContent("projects").slice(0, 2);
+  const recentPosts = getContent("posts").slice(0, 2);
   return (
     <div className="flex flex-col gap-6">
       <p className="text-[15px]" style={{ lineHeight: 1.6 }}>
@@ -34,6 +35,17 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {recentProjects.map((d) => <ContentCard key={d.slug} doc={d} basePath="/projects" />)}
+          </div>
+        </section>
+      )}
+      {recentPosts.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <span className="text-[14px] font-medium">최근 글</span>
+            <a href="/blog" className="text-[12px] underline">전체 보기 →</a>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {recentPosts.map((d) => <ContentCard key={d.slug} doc={d} basePath="/blog" />)}
           </div>
         </section>
       )}
