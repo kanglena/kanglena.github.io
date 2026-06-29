@@ -36,10 +36,14 @@ export function getContent(collection: Collection): Doc[] {
       const raw = fs.readFileSync(path.join(dir, f), "utf8");
       const { data, content } = matter(raw);
       validateFrontmatter(`content/${collection}/${f}`, collection, data);
+      const rawDate = data.date;
+      const date = rawDate instanceof Date
+        ? rawDate.toISOString().slice(0, 10)
+        : String(rawDate);
       return {
         slug,
         title: String(data.title),
-        date: String(data.date),
+        date,
         category: String(data.category),
         summary: data.summary as string | undefined,
         tags: data.tags as string[] | undefined,

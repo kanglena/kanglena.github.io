@@ -7,6 +7,11 @@ describe("getContent", () => {
     expect(items.length).toBeGreaterThanOrEqual(2);
     expect(items[0].date >= items[1].date).toBe(true);
   });
+  it("date는 YYYY-MM-DD 형식이어야 한다", () => {
+    const items = getContent("projects");
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
   it("본문을 html로 변환한다", () => {
     const items = getContent("posts");
     expect(items[0].html).toContain("<p>");
