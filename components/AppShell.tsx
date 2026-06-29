@@ -1,4 +1,5 @@
 import SideNav from "./SideNav";
+import MobileTabBar from "./MobileTabBar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -8,22 +9,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* 타이틀바 */}
         <div className="nb-display flex items-center justify-between px-3 py-2"
              style={{ background: "var(--mustard)", borderBottom: "2.5px solid var(--ink)" }}>
-          <span className="text-[12px] font-bold">C:\강인아 — portfolio</span>
+          <span className="truncate max-w-[55%] text-[12px] font-bold">C:\강인아 — portfolio</span>
           <span className="flex items-center gap-3">
             <a href="https://github.com/" aria-label="GitHub" target="_blank" rel="noopener noreferrer">⌥</a>
             <a href="mailto:" aria-label="이메일 보내기">✉</a>
             <span aria-hidden style={{ opacity: 0.4, fontSize: 11 }}>_ □ ✕</span>
           </span>
         </div>
-        {/* 본문: 데스크톱 사이드바 + main / 모바일 하단탭바는 Task 10 */}
+        {/* 본문: 데스크톱 사이드바 + main */}
         <div className="flex">
           <aside className="hidden sm:block w-[160px] shrink-0"
                  style={{ borderRight: "2.5px solid var(--ink)" }}>
             <SideNav />
           </aside>
-          <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
+          <main className="min-w-0 flex-1 p-4 sm:p-6 pb-20 sm:pb-6">{children}</main>
         </div>
       </div>
+      <MobileTabBar />
     </div>
   );
 }
