@@ -4,9 +4,10 @@
   --paper: #f2f1ea;
   --card: #fbfaf6;
   --ink: #1a1a15;
-  --muted: #7a786e;
+  --muted: #6c6a60;
   --line: rgba(26, 26, 21, 0.12);
   --accent: #10864b;
+  --accent-ink: #0c6e3d;
   --accent2: #16c172;
   --accent-soft: rgba(16, 134, 75, 0.1);
 }
@@ -53,13 +54,25 @@ body {
 .lp-navlink { transition: color 0.2s; }
 .lp-navlink:hover { color: var(--ink); }
 .lp-langbtn { transition: all 0.2s; }
-.lp-langbtn:hover { border-color: var(--accent); color: var(--accent); }
+.lp-langbtn:hover { border-color: var(--accent); color: var(--accent-ink); }
 .lp-proj { transition: box-shadow 0.3s ease, border-color 0.3s ease; }
 .lp-proj:hover { box-shadow: 0 26px 64px rgba(26, 26, 21, 0.1); border-color: rgba(16, 134, 75, 0.45); }
 .lp-link { transition: color 0.2s, border-color 0.2s; }
-.lp-link:hover { color: var(--accent); border-color: var(--accent); }
+.lp-link:hover { color: var(--accent-ink); border-color: var(--accent); }
 .lp-copy { transition: all 0.2s; }
-.lp-copy:hover { border-color: var(--accent); color: var(--accent); }
+.lp-copy:hover { border-color: var(--accent); color: var(--accent-ink); }
+
+/* visible keyboard focus (inline styles don't set outline, so this wins) */
+:where(a, button, input):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* phones: drop the in-page nav links (short page, scroll suffices) so the header doesn't overflow */
+@media (max-width: 480px) {
+  .lp-navlink { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
