@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const SANS = "var(--font-space), 'Space Grotesk', sans-serif";
 const MONO = "var(--font-mono), 'JetBrains Mono', monospace";
+const PROMPT = "lena@portfolio ~ %";
 
 type Lang = "ko" | "en";
 type Hero = "terminal" | "editorial" | "code";
@@ -24,12 +25,12 @@ const COLORS: Record<string, string> = {
 const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name: string; tag: string }; code: CodeSeg[][] }> = {
   ko: {
     terminal: [
-      { prompt: "lena@gaon ~ %", cmd: "whoami" },
+      { prompt: PROMPT, cmd: "whoami" },
       { out: "강인아 · Lena" },
-      { prompt: "lena@gaon ~ %", cmd: "cat profile.txt" },
+      { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "대치중학교 2학년 — 학생 개발자" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: "lena@gaon ~ %", cmd: "ls ~/projects" },
+      { prompt: PROMPT, cmd: "ls ~/projects" },
       { out: "가온케어/", accent: true },
     ],
     edi: { kicker: "// 학생 개발자 · 대치중학교", name: "강인아", tag: "불편함을 코드로 푸는 사람." },
@@ -45,12 +46,12 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
   },
   en: {
     terminal: [
-      { prompt: "lena@gaon ~ %", cmd: "whoami" },
+      { prompt: PROMPT, cmd: "whoami" },
       { out: "강인아 · Lena" },
-      { prompt: "lena@gaon ~ %", cmd: "cat profile.txt" },
+      { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "Daechi Middle School, grade 8 — student developer" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: "lena@gaon ~ %", cmd: "ls ~/projects" },
+      { prompt: PROMPT, cmd: "ls ~/projects" },
       { out: "gaon-care/", accent: true },
     ],
     edi: { kicker: "// student developer · Daechi MS", name: "Lena", tag: "I turn friction into code." },
@@ -66,6 +67,42 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
   },
 };
 
+// interactive-terminal copy (commands a visitor can actually type)
+const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profile: string[]; go: Record<"about" | "work" | "contact", string>; inputLabel: string }> = {
+  ko: {
+    hint: "# 직접 입력해보세요 — 'help' 치고 Enter ↵",
+    help: [
+      "available commands —",
+      "  whoami            나에 대해",
+      "  cat profile.txt   프로필 정보",
+      "  about             소개 섹션으로 이동",
+      "  work              프로젝트 섹션으로 이동",
+      "  contact           연락처 섹션으로 이동",
+      "  clear             화면 지우기",
+    ],
+    whoami: ["강인아 · Lena"],
+    profile: ["대치중학교 2학년 — 학생 개발자", "stack: Python · JavaScript · AI"],
+    go: { about: "→ 소개로 이동합니다…", work: "→ 프로젝트로 이동합니다…", contact: "→ 연락처로 이동합니다…" },
+    inputLabel: "터미널 명령어 입력",
+  },
+  en: {
+    hint: "# try it yourself — type 'help' and hit ↵",
+    help: [
+      "available commands —",
+      "  whoami            about me",
+      "  cat profile.txt   profile info",
+      "  about             jump to the about section",
+      "  work              jump to the work section",
+      "  contact           jump to the contact section",
+      "  clear             clear the screen",
+    ],
+    whoami: ["강인아 · Lena"],
+    profile: ["Daechi Middle School, grade 8 — student developer", "stack: Python · JavaScript · AI"],
+    go: { about: "→ opening about…", work: "→ opening work…", contact: "→ opening contact…" },
+    inputLabel: "terminal command input",
+  },
+};
+
 const I18N = {
   ko: {
     nav: { about: "소개", work: "프로젝트", contact: "연락처" },
@@ -78,7 +115,7 @@ const I18N = {
       stat: { statusK: "status", statusV: "프로젝트 빌드 중", locK: "location", locV: "서울 · 대치중", focusK: "focus", focusV: "web · kiosk · AI" },
       skillsLabel: "// 기술 스택",
     },
-    work: { tag: "$ ls ~/projects", heading: "대표 프로젝트", sub: "직접 기획하고 배포해 실제로 쓰이는 서비스.", next: "다음 프로젝트 커밋 준비 중…" },
+    work: { tag: "$ ls ~/projects", heading: "대표 프로젝트", sub: "기획부터 개발까지 직접 끌고 간 프로젝트.", next: "다음 프로젝트 커밋 준비 중…" },
     proj: {
       year: "2026 — 준비 중",
       solo: "1인 개발",
@@ -91,6 +128,7 @@ const I18N = {
       feat: ["QR 대여·반납", "연체 자동 감지", "QR 라벨 출력"],
       stack: "Next.js 16 · React 19 · TypeScript · Supabase · Tailwind",
       builtWith: "Claude Design · Claude Code",
+      repoStatus: "repo · 비공개",
       desc: "우산 QR을 찍고 5자리 학번만 누르면 대여, 반납은 QR만 다시 찍으면 끝. 학생회는 재고·대여 현황·3일 초과 연체를 한 화면에서 관리합니다.",
     },
     contact: { tag: "$ ./contact.sh", heading: "공모전·대회, 같이 나가요", body: "공모전이나 대회 같이 나갈 사람, 협업하고 싶은 사람 찾고 있어요. 그냥 궁금한 것도 편하게 연락 주세요!", email: "lenakang0002@gmail.com", github: "github.com/kanglena", status: "공모전 · 협업 같이 할 사람 찾는 중" },
@@ -107,7 +145,7 @@ const I18N = {
       stat: { statusK: "status", statusV: "building projects", locK: "location", locV: "Seoul · Daechi MS", focusK: "focus", focusV: "web · kiosk · AI" },
       skillsLabel: "// tech stack",
     },
-    work: { tag: "$ ls ~/projects", heading: "Featured work", sub: "Services I designed, shipped, and people actually use.", next: "next project — committing soon…" },
+    work: { tag: "$ ls ~/projects", heading: "Featured work", sub: "A service I designed and built end-to-end for student council.", next: "next project — committing soon…" },
     proj: {
       year: "2026 — in progress",
       solo: "solo build",
@@ -120,6 +158,7 @@ const I18N = {
       feat: ["QR rent / return", "Overdue alerts", "QR label print"],
       stack: "Next.js 16 · React 19 · TypeScript · Supabase · Tailwind",
       builtWith: "Claude Design · Claude Code",
+      repoStatus: "repo · private",
       desc: "Scan an umbrella's QR and tap a 5-digit student ID to rent; return is just one more scan. The council tracks stock, active rentals, and 3-day overdue items on one screen.",
     },
     contact: { tag: "$ ./contact.sh", heading: "Let's team up", body: "Looking for people to enter contests and competitions with — collabs and questions welcome too. Reach out anytime!", email: "lenakang0002@gmail.com", github: "github.com/kanglena", status: "looking for contest & collab teammates" },
@@ -127,6 +166,7 @@ const I18N = {
   },
 };
 
+const GITHUB_URL = "https://github.com/kanglena";
 const SKILLS = ["Python", "JavaScript", "AI", "HTML / CSS", "React", "Web Deploy", "Kiosk UX", "Back-office"];
 
 export default function LenaPortfolio() {
@@ -142,10 +182,28 @@ export default function LenaPortfolio() {
 
   const t = I18N[lang];
 
+  // restore saved language preference on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lp-lang");
+      if (saved === "ko" || saved === "en") setLang(saved);
+    } catch {}
+  }, []);
+
+  // keep <html lang>, document title, and saved preference in sync with the toggle
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.title = lang === "ko" ? "강인아 (Lena) — 학생 개발자 포트폴리오" : "Lena (강인아) — Student Developer Portfolio";
+    try {
+      localStorage.setItem("lp-lang", lang);
+    } catch {}
+  }, [lang]);
+
   // scroll progress + parallax + mouse glow + reveal-on-scroll (mount once)
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    const reduce = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
 
     const upd = () => {
@@ -154,6 +212,7 @@ export default function LenaPortfolio() {
       const sc = h.scrollTop || document.body.scrollTop || 0;
       const max = h.scrollHeight - h.clientHeight || 1;
       if (p) p.style.width = Math.min(100, (sc / max) * 100) + "%";
+      if (reduce) return;
       root.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
         const s = parseFloat(el.getAttribute("data-parallax") || "0") || 0;
         el.style.transform = "translateY(" + sc * s + "px)";
@@ -169,25 +228,33 @@ export default function LenaPortfolio() {
     window.addEventListener("scroll", onScroll, { passive: true });
     upd();
 
-    const g = glowRef.current;
-    const heroEl = root.querySelector<HTMLElement>("#top");
-    if (g && heroEl) {
-      const r = heroEl.getBoundingClientRect();
-      g.style.transform = "translate(" + (r.width / 2 - 280) + "px," + (r.height * 0.4 - 280) + "px)";
+    let onMouse: ((e: MouseEvent) => void) | null = null;
+    if (!reduce) {
+      const g = glowRef.current;
+      const heroEl = root.querySelector<HTMLElement>("#top");
+      if (g && heroEl) {
+        const r = heroEl.getBoundingClientRect();
+        g.style.transform = "translate(" + (r.width / 2 - 280) + "px," + (r.height * 0.4 - 280) + "px)";
+      }
+      onMouse = (e: MouseEvent) => {
+        const gg = glowRef.current;
+        const h = root.querySelector<HTMLElement>("#top");
+        if (!gg || !h) return;
+        const rect = h.getBoundingClientRect();
+        if (e.clientY < rect.top || e.clientY > rect.bottom) return;
+        gg.style.transform = "translate(" + (e.clientX - rect.left - 280) + "px," + (e.clientY - rect.top - 280) + "px)";
+      };
+      window.addEventListener("mousemove", onMouse, { passive: true });
     }
-    const onMouse = (e: MouseEvent) => {
-      const gg = glowRef.current;
-      const h = root.querySelector<HTMLElement>("#top");
-      if (!gg || !h) return;
-      const rect = h.getBoundingClientRect();
-      if (e.clientY < rect.top || e.clientY > rect.bottom) return;
-      gg.style.transform = "translate(" + (e.clientX - rect.left - 280) + "px," + (e.clientY - rect.top - 280) + "px)";
-    };
-    window.addEventListener("mousemove", onMouse, { passive: true });
 
     const nodes = root.querySelectorAll<HTMLElement>("[data-reveal]");
     let io: IntersectionObserver | null = null;
-    if ("IntersectionObserver" in window) {
+    if (reduce || !("IntersectionObserver" in window)) {
+      nodes.forEach((el) => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      });
+    } else {
       io = new IntersectionObserver(
         (entries) => {
           entries.forEach((en) => {
@@ -204,28 +271,26 @@ export default function LenaPortfolio() {
         { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
       );
       nodes.forEach((el) => io!.observe(el));
-    } else {
-      nodes.forEach((el) => {
-        el.style.opacity = "1";
-        el.style.transform = "none";
-      });
     }
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("mousemove", onMouse);
+      if (onMouse) window.removeEventListener("mousemove", onMouse);
       if (raf) cancelAnimationFrame(raf);
       io?.disconnect();
     };
   }, []);
 
-  // hero typing animation — rebuilds on lang/hero change
+  // hero typing animation + interactive terminal — rebuilds on lang/hero change
   useEffect(() => {
     const box = heroBodyRef.current;
     const title = heroTitleRef.current;
     if (!box) return;
 
+    const reduce = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let cancelled = false;
+    let teardownInteractive: (() => void) | null = null;
     const timers = new Set<number>();
     const setT = (fn: () => void, ms: number) => {
       const id = window.setTimeout(() => {
@@ -242,6 +307,7 @@ export default function LenaPortfolio() {
       const c = document.createElement("span");
       c.textContent = "▋";
       c.style.cssText = "display:inline-block;color:var(--accent);animation:blink 1s steps(1) infinite;margin-left:1px;";
+      if (reduce) c.style.animation = "none";
       return c;
     };
     let cursor = makeCursor();
@@ -264,27 +330,160 @@ export default function LenaPortfolio() {
 
     const buildTerminal = () => {
       const steps = heroData[lang].terminal;
+      const T = TERM[lang];
       box.style.fontFamily = MONO;
       box.style.fontSize = "clamp(14px,1.7vw,17px)";
       box.style.lineHeight = "1.95";
       box.style.color = "var(--ink)";
-      let i = 0;
+      box.style.maxHeight = "clamp(300px,46vh,420px)";
+      box.style.overflowY = "auto";
+
       const mkline = () => {
         const d = document.createElement("div");
         d.style.cssText = "display:flex;flex-wrap:wrap;white-space:pre-wrap;word-break:break-word;";
         box.appendChild(d);
         return d;
       };
+      const scrollBottom = () => {
+        box.scrollTop = box.scrollHeight;
+      };
+      const printLines = (arr: string[], color: string) => {
+        arr.forEach((txt) => {
+          const d = mkline();
+          d.style.color = color;
+          d.style.whiteSpace = "pre-wrap";
+          d.textContent = txt;
+        });
+      };
+
+      // ---- live input ----
+      let inputEl: HTMLInputElement | null = null;
+      let live: { val: HTMLSpanElement; cur: HTMLElement } | null = null;
+
+      const newPrompt = () => {
+        const line = mkline();
+        const p = document.createElement("span");
+        p.textContent = PROMPT + " ";
+        p.style.color = "var(--accent-ink)";
+        p.style.fontWeight = "600";
+        const val = document.createElement("span");
+        val.style.color = "var(--ink)";
+        const cur = makeCursor();
+        line.appendChild(p);
+        line.appendChild(val);
+        line.appendChild(cur);
+        live = { val, cur };
+        scrollBottom();
+      };
+
+      const focusInput = () => inputEl?.focus();
+
+      const onInput = () => {
+        if (live && inputEl) {
+          live.val.textContent = inputEl.value;
+          scrollBottom();
+        }
+      };
+
+      const navTo = (id: string, msg: string) => {
+        printLines([msg], "var(--accent-ink)");
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      };
+
+      const runCommand = (raw: string) => {
+        const cmd = raw.trim().toLowerCase();
+        if (cmd === "clear" || cmd === "cls") {
+          box.innerHTML = "";
+          if (inputEl) box.appendChild(inputEl);
+          newPrompt();
+          return;
+        }
+        if (cmd === "") {
+          newPrompt();
+          return;
+        }
+        if (cmd === "help" || cmd === "?" || cmd === "ls -a") printLines(T.help, "var(--muted)");
+        else if (cmd === "whoami") printLines(T.whoami, "var(--ink)");
+        else if (cmd === "cat profile.txt" || cmd === "profile" || cmd === "cat profile") printLines(T.profile, "var(--muted)");
+        else if (["about", "cd about", "open about", "cat about.md"].includes(cmd)) navTo("about", T.go.about);
+        else if (["work", "projects", "ls", "ls ~/projects", "cd work", "cd ~/projects", "open work"].includes(cmd)) navTo("work", T.go.work);
+        else if (["contact", "cd contact", "open contact", "./contact.sh", "cat contact"].includes(cmd)) navTo("contact", T.go.contact);
+        else printLines([lang === "ko" ? `command not found: ${raw.trim()} — 'help' 입력` : `command not found: ${raw.trim()} — type 'help'`], "var(--muted)");
+        newPrompt();
+      };
+
+      const submit = (raw: string) => {
+        if (!live) return;
+        live.val.textContent = raw;
+        if (live.cur.parentNode) live.cur.parentNode.removeChild(live.cur);
+        live = null;
+        runCommand(raw);
+        focusInput();
+      };
+
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const v = inputEl ? inputEl.value : "";
+          if (inputEl) inputEl.value = "";
+          submit(v);
+        }
+      };
+
+      const onBoxClick = () => focusInput();
+
+      const goInteractive = () => {
+        if (cursor.parentNode) cursor.parentNode.removeChild(cursor);
+        inputEl = document.createElement("input");
+        inputEl.type = "text";
+        inputEl.setAttribute("aria-label", T.inputLabel);
+        inputEl.setAttribute("autocomplete", "off");
+        inputEl.setAttribute("autocapitalize", "none");
+        inputEl.setAttribute("autocorrect", "off");
+        inputEl.spellcheck = false;
+        inputEl.style.cssText = "position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;";
+        box.appendChild(inputEl);
+        inputEl.addEventListener("input", onInput);
+        inputEl.addEventListener("keydown", onKey);
+        box.style.cursor = "text";
+        box.addEventListener("click", onBoxClick);
+        teardownInteractive = () => {
+          box.removeEventListener("click", onBoxClick);
+          box.style.cursor = "";
+        };
+        printLines([T.hint], "var(--muted)");
+        newPrompt();
+      };
+
+      if (reduce) {
+        steps.forEach((s) => {
+          const line = mkline();
+          if (s.cmd !== undefined) {
+            const p = document.createElement("span");
+            p.textContent = s.prompt + " ";
+            p.style.color = "var(--accent-ink)";
+            p.style.fontWeight = "600";
+            const c = document.createElement("span");
+            c.style.color = "var(--ink)";
+            c.textContent = s.cmd;
+            line.appendChild(p);
+            line.appendChild(c);
+          } else {
+            line.style.color = s.accent ? "var(--accent-ink)" : "var(--muted)";
+            if (s.accent) line.style.fontWeight = "600";
+            line.textContent = s.out || "";
+          }
+        });
+        goInteractive();
+        return;
+      }
+
+      let i = 0;
       const next = () => {
         if (cancelled) return;
         if (i >= steps.length) {
-          const line = mkline();
-          const p = document.createElement("span");
-          p.textContent = "lena@gaon ~ % ";
-          p.style.color = "var(--accent)";
-          p.style.fontWeight = "600";
-          line.appendChild(p);
-          line.appendChild(cursor);
+          goInteractive();
           return;
         }
         const s = steps[i];
@@ -293,7 +492,7 @@ export default function LenaPortfolio() {
         if (s.cmd !== undefined) {
           const p = document.createElement("span");
           p.textContent = s.prompt + " ";
-          p.style.color = "var(--accent)";
+          p.style.color = "var(--accent-ink)";
           p.style.fontWeight = "600";
           const c = document.createElement("span");
           c.style.color = "var(--ink)";
@@ -302,7 +501,7 @@ export default function LenaPortfolio() {
           line.appendChild(cursor);
           typeText(c, s.cmd, cps(24), () => setT(next, dly(280)));
         } else {
-          line.style.color = s.accent ? "var(--accent)" : "var(--muted)";
+          line.style.color = s.accent ? "var(--accent-ink)" : "var(--muted)";
           if (s.accent) line.style.fontWeight = "600";
           line.style.opacity = "0";
           line.style.transition = "opacity .35s ease";
@@ -310,6 +509,7 @@ export default function LenaPortfolio() {
           requestAnimationFrame(() => {
             if (!cancelled) line.style.opacity = "1";
           });
+          scrollBottom();
           setT(next, dly(150));
         }
       };
@@ -323,7 +523,7 @@ export default function LenaPortfolio() {
       box.style.justifyContent = "center";
       box.style.gap = "clamp(14px,2vw,22px)";
       const kicker = document.createElement("div");
-      kicker.style.cssText = "font-family:" + MONO + ";font-size:13px;letter-spacing:0.03em;color:var(--accent);min-height:1.2em;";
+      kicker.style.cssText = "font-family:" + MONO + ";font-size:13px;letter-spacing:0.03em;color:var(--accent-ink);min-height:1.2em;";
       const h1 = document.createElement("div");
       h1.style.cssText = "font-family:" + SANS + ";font-weight:600;font-size:clamp(48px,9vw,104px);line-height:0.98;letter-spacing:-0.04em;color:var(--ink);min-height:0.98em;";
       const tagWrap = document.createElement("div");
@@ -336,7 +536,7 @@ export default function LenaPortfolio() {
         const it = document.createElement("span");
         const n = document.createElement("span");
         n.textContent = p[0] + " ";
-        n.style.color = "var(--accent)";
+        n.style.color = "var(--accent-ink)";
         it.appendChild(n);
         it.appendChild(document.createTextNode(p[1]));
         idx.appendChild(it);
@@ -345,6 +545,13 @@ export default function LenaPortfolio() {
       box.appendChild(h1);
       box.appendChild(tagWrap);
       box.appendChild(idx);
+      if (reduce) {
+        kicker.textContent = e.kicker;
+        h1.textContent = e.name;
+        tagSpan.textContent = e.tag;
+        idx.style.opacity = "1";
+        return;
+      }
       typeText(kicker, e.kicker, cps(42), () => {
         typeText(h1, e.name, cps(11), () => {
           tagWrap.appendChild(cursor);
@@ -361,13 +568,8 @@ export default function LenaPortfolio() {
       box.style.fontSize = "clamp(13px,1.55vw,16px)";
       box.style.lineHeight = "2";
       box.style.color = "var(--ink)";
-      let li = 0;
-      const runLine = () => {
-        if (cancelled) return;
-        if (li >= lines.length) return;
-        const segs = lines[li];
-        const num = li + 1;
-        li++;
+
+      const mkRow = (num: number) => {
         const row = document.createElement("div");
         row.style.cssText = "display:flex;gap:18px;align-items:flex-start;";
         const g = document.createElement("span");
@@ -378,6 +580,36 @@ export default function LenaPortfolio() {
         row.appendChild(g);
         row.appendChild(code);
         box.appendChild(row);
+        return code;
+      };
+      const mkSeg = (sg: CodeSeg) => {
+        const sp = document.createElement("span");
+        sp.style.color = COLORS[sg.c] || "var(--ink)";
+        sp.style.whiteSpace = "pre";
+        if (sg.c === "com") sp.style.fontStyle = "italic";
+        return sp;
+      };
+
+      if (reduce) {
+        lines.forEach((segs, idx) => {
+          const code = mkRow(idx + 1);
+          segs.forEach((sg) => {
+            const sp = mkSeg(sg);
+            sp.textContent = sg.t;
+            code.appendChild(sp);
+          });
+        });
+        return;
+      }
+
+      let li = 0;
+      const runLine = () => {
+        if (cancelled) return;
+        if (li >= lines.length) return;
+        const segs = lines[li];
+        const num = li + 1;
+        li++;
+        const code = mkRow(num);
         let si = 0;
         const runSeg = () => {
           if (cancelled) return;
@@ -387,10 +619,7 @@ export default function LenaPortfolio() {
           }
           const sg = segs[si];
           si++;
-          const sp = document.createElement("span");
-          sp.style.color = COLORS[sg.c] || "var(--ink)";
-          sp.style.whiteSpace = "pre";
-          if (sg.c === "com") sp.style.fontStyle = "italic";
+          const sp = mkSeg(sg);
           code.appendChild(sp);
           code.appendChild(cursor);
           typeText(sp, sg.t, cps(46), runSeg);
@@ -402,38 +631,43 @@ export default function LenaPortfolio() {
 
     // start
     box.innerHTML = "";
-    (["display", "flexDirection", "justifyContent", "gap", "fontFamily", "fontSize", "lineHeight", "color"] as const).forEach((k) => {
+    (["display", "flexDirection", "justifyContent", "gap", "fontFamily", "fontSize", "lineHeight", "color", "maxHeight", "overflowY", "cursor"] as const).forEach((k) => {
       box.style[k] = "";
     });
     cursor = makeCursor();
-    if (title) title.textContent = hero === "terminal" ? "zsh — lena@gaon: ~" : hero === "code" ? "developer.py — ~/portfolio" : "~/portfolio/index";
+    if (title) title.textContent = hero === "terminal" ? "zsh — lena@portfolio: ~" : hero === "code" ? "developer.py — ~/portfolio" : "~/portfolio/index";
     const startId = setT(() => {
       if (hero === "terminal") buildTerminal();
       else if (hero === "code") buildCode();
       else buildEditorial();
-    }, 380);
+    }, reduce ? 0 : 380);
     timers.add(startId);
 
     return () => {
       cancelled = true;
+      teardownInteractive?.();
       timers.forEach((id) => clearTimeout(id));
     };
   }, [lang, hero]);
 
-  const copyEmail = () => {
-    try {
-      navigator.clipboard.writeText(I18N[lang].contact.email);
-    } catch {}
+  const copyEmail = async () => {
     const b = copyBtnRef.current;
-    if (b) {
-      b.textContent = "copied!";
-      b.style.color = "#10864b";
-      b.style.borderColor = "#10864b";
+    const done = (ok: boolean) => {
+      if (!b) return;
+      b.textContent = ok ? (lang === "ko" ? "복사됨!" : "copied!") : lang === "ko" ? "직접 복사하세요" : "select & copy";
+      b.style.color = ok ? "var(--accent-ink)" : "";
+      b.style.borderColor = ok ? "var(--accent)" : "";
       setTimeout(() => {
         b.textContent = "copy";
         b.style.color = "";
         b.style.borderColor = "";
-      }, 1400);
+      }, 1500);
+    };
+    try {
+      await navigator.clipboard.writeText(I18N[lang].contact.email);
+      done(true);
+    } catch {
+      done(false);
     }
   };
 
@@ -443,12 +677,16 @@ export default function LenaPortfolio() {
     transition: "opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)",
   };
 
-  const switchBtn = (mode: Hero, label: string) => {
+  const heroTab = (mode: Hero, label: string, aria: string) => {
     const on = hero === mode;
     return (
       <button
+        type="button"
+        role="tab"
+        aria-selected={on}
+        aria-label={aria}
         onClick={() => setHero(mode)}
-        style={{ fontFamily: MONO, fontSize: 12, border: "none", background: on ? "var(--accent)" : "transparent", color: on ? "#fff" : "var(--muted)", padding: "6px 13px", borderRadius: 999, cursor: "pointer", transition: "all .2s", fontWeight: on ? 600 : 500 }}
+        style={{ fontFamily: MONO, fontSize: 11, border: "none", background: on ? "var(--accent)" : "transparent", color: on ? "#fff" : "var(--muted)", padding: "7px 11px", borderRadius: 7, cursor: "pointer", transition: "all .2s", fontWeight: on ? 600 : 500, minHeight: 32, display: "inline-flex", alignItems: "center" }}
       >
         {label}
       </button>
@@ -460,16 +698,22 @@ export default function LenaPortfolio() {
       <div ref={progressRef} style={{ position: "fixed", top: 0, left: 0, height: 3, width: "0%", background: "linear-gradient(90deg,var(--accent),var(--accent2))", zIndex: 60, transition: "width .08s linear" }} />
 
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "15px clamp(18px,3vw,34px)", background: "rgba(242,241,234,0.72)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: "1px solid var(--line)", fontFamily: MONO }}>
-        <a href="#top" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, textDecoration: "none", color: "var(--ink)" }}>
+        <a href="#top" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, textDecoration: "none", color: "var(--ink)", padding: "8px 4px", margin: "-8px -4px" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--accent)", animation: "dotpulse 2.4s infinite" }} />
           <span style={{ fontWeight: 600 }}>lena</span>
           <span style={{ color: "var(--muted)" }}>@portfolio</span>
         </a>
-        <nav style={{ display: "flex", alignItems: "center", gap: "clamp(14px,2vw,26px)", fontSize: 13 }}>
-          <a className="lp-navlink" href="#about" style={{ textDecoration: "none", color: "var(--muted)" }}>{t.nav.about}</a>
-          <a className="lp-navlink" href="#work" style={{ textDecoration: "none", color: "var(--muted)" }}>{t.nav.work}</a>
-          <a className="lp-navlink" href="#contact" style={{ textDecoration: "none", color: "var(--muted)" }}>{t.nav.contact}</a>
-          <button className="lp-langbtn" onClick={() => setLang((l) => (l === "ko" ? "en" : "ko"))} style={{ fontFamily: MONO, fontSize: 12, border: "1px solid var(--line)", background: "transparent", color: "var(--ink)", padding: "6px 12px", borderRadius: 8, cursor: "pointer" }}>
+        <nav style={{ display: "flex", alignItems: "center", gap: "clamp(8px,2vw,26px)", fontSize: 13 }}>
+          <a className="lp-navlink" href="#about" style={{ textDecoration: "none", color: "var(--muted)", padding: "10px 6px", margin: "-10px 0" }}>{t.nav.about}</a>
+          <a className="lp-navlink" href="#work" style={{ textDecoration: "none", color: "var(--muted)", padding: "10px 6px", margin: "-10px 0" }}>{t.nav.work}</a>
+          <a className="lp-navlink" href="#contact" style={{ textDecoration: "none", color: "var(--muted)", padding: "10px 6px", margin: "-10px 0" }}>{t.nav.contact}</a>
+          <button
+            className="lp-langbtn"
+            type="button"
+            aria-label={lang === "ko" ? "Switch to English" : "한국어로 보기"}
+            onClick={() => setLang((l) => (l === "ko" ? "en" : "ko"))}
+            style={{ fontFamily: MONO, fontSize: 12, border: "1px solid var(--line)", background: "transparent", color: "var(--ink)", padding: "8px 13px", borderRadius: 8, cursor: "pointer", minHeight: 38, display: "inline-flex", alignItems: "center" }}
+          >
             {lang === "ko" ? "EN" : "KR"}
           </button>
         </nav>
@@ -480,13 +724,18 @@ export default function LenaPortfolio() {
         <div ref={glowRef} aria-hidden="true" style={{ position: "absolute", top: 0, left: 0, width: 560, height: 560, borderRadius: "50%", background: "radial-gradient(circle,rgba(16,134,75,0.18),transparent 66%)", filter: "blur(8px)", pointerEvents: "none", transition: "transform .22s ease-out", willChange: "transform" }} />
         <div style={{ position: "relative", width: "100%", maxWidth: 980, margin: "0 auto" }}>
           <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 16, boxShadow: "0 34px 90px rgba(26,26,21,0.10)", overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", borderBottom: "1px solid var(--line)", background: "rgba(26,26,21,0.018)" }}>
-              <div style={{ display: "flex", gap: 7 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", borderBottom: "1px solid var(--line)", background: "rgba(26,26,21,0.018)" }}>
+              <div style={{ display: "flex", gap: 7, flex: "none" }}>
                 <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#e5564b" }} />
                 <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#e8b23a" }} />
                 <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#3bb665" }} />
               </div>
-              <div ref={heroTitleRef} style={{ fontFamily: MONO, fontSize: 12, color: "var(--muted)" }} />
+              <div ref={heroTitleRef} style={{ fontFamily: MONO, fontSize: 12, color: "var(--muted)", flex: "1 1 auto", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} />
+              <div role="tablist" aria-label={lang === "ko" ? "히어로 화면 전환" : "hero view switcher"} style={{ display: "flex", gap: 2, flex: "none" }}>
+                {heroTab("terminal", "term", lang === "ko" ? "터미널 화면" : "Terminal view")}
+                {heroTab("editorial", "edit", lang === "ko" ? "에디토리얼 화면" : "Editorial view")}
+                {heroTab("code", "code", lang === "ko" ? "코드 화면" : "Code view")}
+              </div>
             </div>
             <div ref={heroBodyRef} style={{ padding: "clamp(26px,3.6vw,42px)", minHeight: "clamp(300px,40vh,400px)" }} />
           </div>
@@ -500,7 +749,7 @@ export default function LenaPortfolio() {
       <section id="about" style={{ scrollMarginTop: 90, padding: "clamp(70px,10vw,120px) 28px", position: "relative" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div data-reveal style={reveal}>
-            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>{t.about.tag}</div>
+            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent-ink)", fontWeight: 500 }}>{t.about.tag}</div>
             <h2 style={{ fontSize: "clamp(28px,4.4vw,50px)", fontWeight: 600, letterSpacing: "-0.032em", lineHeight: 1.08, maxWidth: "19ch", margin: "18px 0 0", textWrap: "pretty" }}>{t.about.heading}</h2>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(32px,5vw,56px)", marginTop: "clamp(34px,5vw,54px)" }}>
@@ -508,7 +757,7 @@ export default function LenaPortfolio() {
               <p style={{ fontSize: "clamp(16px,1.7vw,20px)", lineHeight: 1.7, color: "var(--ink)", margin: "0 0 20px", textWrap: "pretty", maxWidth: "60ch" }}>{t.about.p1}</p>
               <p style={{ fontSize: "clamp(16px,1.7vw,20px)", lineHeight: 1.7, color: "var(--muted)", margin: 0, textWrap: "pretty", maxWidth: "60ch" }}>{t.about.p2}</p>
               <div style={{ marginTop: 34 }}>
-                <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--accent)", marginBottom: 14 }}>{t.about.skillsLabel}</div>
+                <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--accent-ink)", marginBottom: 14 }}>{t.about.skillsLabel}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 9, fontFamily: MONO, fontSize: 13 }}>
                   {SKILLS.map((s) => (
                     <span key={s} style={{ padding: "6px 13px", border: "1px solid var(--line)", borderRadius: 999, background: "var(--card)" }}>{s}</span>
@@ -525,7 +774,7 @@ export default function LenaPortfolio() {
                 <div style={{ padding: "8px 18px 14px", fontFamily: MONO, fontSize: 13 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 14, padding: "11px 0", borderBottom: "1px dashed var(--line)" }}>
                     <span style={{ color: "var(--muted)" }}>{t.about.stat.statusK}</span>
-                    <span style={{ color: "var(--accent)", fontWeight: 600 }}>{t.about.stat.statusV}</span>
+                    <span style={{ color: "var(--accent-ink)", fontWeight: 600 }}>{t.about.stat.statusV}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 14, padding: "11px 0", borderBottom: "1px dashed var(--line)" }}>
                     <span style={{ color: "var(--muted)" }}>{t.about.stat.locK}</span>
@@ -545,7 +794,7 @@ export default function LenaPortfolio() {
       <section id="work" style={{ scrollMarginTop: 90, padding: "clamp(60px,8vw,100px) 28px", position: "relative" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div data-reveal style={{ ...reveal, marginBottom: "clamp(28px,4vw,44px)" }}>
-            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>{t.work.tag}</div>
+            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent-ink)", fontWeight: 500 }}>{t.work.tag}</div>
             <h2 style={{ fontSize: "clamp(28px,4.4vw,50px)", fontWeight: 600, letterSpacing: "-0.032em", lineHeight: 1.08, margin: "16px 0 8px" }}>{t.work.heading}</h2>
             <p style={{ fontSize: "clamp(15px,1.6vw,18px)", color: "var(--muted)", margin: 0, maxWidth: "50ch" }}>{t.work.sub}</p>
           </div>
@@ -560,12 +809,12 @@ export default function LenaPortfolio() {
                 <div style={{ display: "flex", gap: "clamp(12px,1.6vw,18px)", alignItems: "flex-start" }}>
                   <div style={{ fontFamily: MONO, fontSize: "clamp(38px,5vw,54px)", fontWeight: 700, lineHeight: 0.82, color: "rgba(16,134,75,0.18)", flex: "none" }}>01</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-                    <h3 style={{ fontSize: "clamp(32px,4.6vw,46px)", fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 0.95, margin: 0 }}>{t.proj.title}</h3>
+                    <h3 style={{ fontSize: "clamp(30px,4.2vw,42px)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 0.98, margin: 0 }}>{t.proj.title}</h3>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 12, color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 11px" }}>
                         <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#c8a93a" }} />{t.proj.year}
                       </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 12, color: "var(--accent)", background: "var(--accent-soft)", borderRadius: 999, padding: "4px 12px", fontWeight: 600 }}>{t.proj.solo}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 12, color: "var(--accent-ink)", background: "var(--accent-soft)", borderRadius: 999, padding: "4px 12px", fontWeight: 600 }}>{t.proj.solo}</span>
                     </div>
                   </div>
                 </div>
@@ -577,7 +826,7 @@ export default function LenaPortfolio() {
                     <span key={s.k} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                       {i > 0 && <span style={{ color: "var(--muted)", fontFamily: MONO }}>+</span>}
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--paper)" }}>
-                        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>{s.k}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: "var(--accent-ink)" }}>{s.k}</span>
                         <span style={{ fontSize: 13, color: "var(--ink)" }}>{s.v}</span>
                       </span>
                     </span>
@@ -586,30 +835,26 @@ export default function LenaPortfolio() {
 
                 <p style={{ fontSize: 14.5, lineHeight: 1.7, color: "var(--muted)", margin: "16px 0 0", maxWidth: "56ch", textWrap: "pretty" }}>{t.proj.desc}</p>
 
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px dashed var(--line)", display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", fontFamily: MONO, fontSize: 12.5, alignItems: "start" }}>
-                  <span style={{ color: "var(--accent)" }}>features</span>
+                <div style={{ marginTop: 22, paddingTop: 18, borderTop: "1px dashed var(--line)", display: "grid", gridTemplateColumns: "auto 1fr", gap: "12px 16px", fontFamily: MONO, fontSize: 12.5, alignItems: "start" }}>
+                  <span style={{ color: "var(--muted)" }}>stack</span>
+                  <span style={{ color: "var(--ink)", fontWeight: 500 }}>{t.proj.stack}</span>
+                  <span style={{ color: "var(--muted)" }}>features</span>
                   <span style={{ color: "var(--ink)" }}>{t.proj.feat.join(" · ")}</span>
-                  <span style={{ color: "var(--accent)" }}>stack</span>
-                  <span style={{ color: "var(--ink)" }}>{t.proj.stack}</span>
-                  <span style={{ color: "var(--accent)" }}>built with</span>
-                  <span style={{ color: "var(--ink)" }}>{t.proj.builtWith}</span>
+                  <span style={{ color: "var(--muted)", opacity: 0.85 }}>built with</span>
+                  <span style={{ color: "var(--muted)" }}>{t.proj.builtWith}</span>
                 </div>
 
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginTop: 18, fontFamily: MONO, fontSize: 13 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: "var(--muted)" }} aria-label="GitHub — 준비 중">
-                    <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-                    </svg>
-                    GitHub
-                  </span>
-                  <span style={{ fontSize: 11, border: "1px solid var(--line)", borderRadius: 6, padding: "2px 7px", color: "var(--muted)" }}>준비 중</span>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 18, fontFamily: MONO, fontSize: 12.5, color: "var(--muted)" }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style={{ opacity: 0.7 }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                  </svg>
+                  {t.proj.repoStatus}
                 </div>
               </div>
             </article>
             <div data-reveal data-reveal-delay="160" style={{ ...reveal, border: "1px dashed var(--line)", borderRadius: 20, padding: "20px 26px", display: "flex", alignItems: "center", gap: 9, fontFamily: MONO, fontSize: 13, color: "var(--muted)" }}>
-              <span style={{ color: "var(--accent)", fontWeight: 600 }}>$</span>
+              <span aria-hidden="true">·</span>
               {t.work.next}
-              <span style={{ display: "inline-block", width: 7, height: "1.05em", background: "var(--accent)", animation: "blink 1s steps(1) infinite", verticalAlign: -2, borderRadius: 1, marginLeft: 1 }} />
             </div>
           </div>
         </div>
@@ -618,7 +863,7 @@ export default function LenaPortfolio() {
       <section id="contact" style={{ scrollMarginTop: 90, padding: "clamp(70px,10vw,130px) 28px clamp(50px,6vw,80px)", position: "relative" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div data-reveal style={{ ...reveal, maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>{t.contact.tag}</div>
+            <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent-ink)", fontWeight: 500 }}>{t.contact.tag}</div>
             <h2 style={{ fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.05, margin: "14px 0 12px" }}>{t.contact.heading}</h2>
             <p style={{ fontSize: "clamp(15px,1.6vw,18px)", color: "var(--muted)", margin: "0 auto", maxWidth: "44ch" }}>{t.contact.body}</p>
           </div>
@@ -633,28 +878,28 @@ export default function LenaPortfolio() {
             </div>
             <div style={{ padding: "20px 22px 22px", fontFamily: MONO, fontSize: 13.5, lineHeight: 1.5 }}>
               <div style={{ marginBottom: 16 }}>
-                <span style={{ color: "var(--accent)", fontWeight: 600 }}>guest@lena</span>
+                <span style={{ color: "var(--accent-ink)", fontWeight: 600 }}>guest@lena</span>
                 <span style={{ color: "var(--muted)" }}> ~ % ./contact.sh</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: "11px 16px", alignItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: "13px 16px", alignItems: "center" }}>
                 <span style={{ color: "var(--muted)" }}>email</span>
                 <a className="lp-link" href={`mailto:${t.contact.email}`} style={{ color: "var(--ink)", textDecoration: "none" }}>{t.contact.email}</a>
-                <button ref={copyBtnRef} className="lp-copy" onClick={copyEmail} style={{ fontFamily: MONO, fontSize: 11.5, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--muted)", padding: "3px 11px", borderRadius: 7, cursor: "pointer", justifySelf: "end" }}>copy</button>
+                <button ref={copyBtnRef} className="lp-copy" type="button" aria-live="polite" aria-label={lang === "ko" ? "이메일 주소 복사" : "copy email address"} onClick={copyEmail} style={{ fontFamily: MONO, fontSize: 11.5, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--muted)", padding: "8px 12px", borderRadius: 7, cursor: "pointer", justifySelf: "end", minHeight: 34 }}>copy</button>
                 <span style={{ color: "var(--muted)" }}>github</span>
-                <span style={{ color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <a className="lp-link" href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ color: "var(--ink)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7, justifySelf: "start" }}>
                   <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
                   </svg>
                   {t.contact.github}
-                </span>
-                <span style={{ fontSize: 11, border: "1px solid var(--line)", borderRadius: 6, padding: "2px 7px", color: "var(--muted)", justifySelf: "end" }}>준비 중</span>
+                </a>
+                <span aria-hidden="true" />
               </div>
               <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px dashed var(--line)", display: "flex", alignItems: "center", gap: 9, color: "var(--muted)", fontSize: 12.5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 0 3px var(--accent-soft)" }} />
                 {t.contact.status}
               </div>
               <div style={{ marginTop: 13, color: "var(--muted)" }}>
-                <span style={{ color: "var(--accent)", fontWeight: 600 }}>guest@lena</span> ~ %{" "}
+                <span style={{ color: "var(--accent-ink)", fontWeight: 600 }}>guest@lena</span> ~ %{" "}
                 <span style={{ display: "inline-block", width: 7, height: "1.05em", background: "var(--accent)", animation: "blink 1s steps(1) infinite", verticalAlign: -2, borderRadius: 1 }} />
               </div>
             </div>
@@ -663,13 +908,6 @@ export default function LenaPortfolio() {
       </section>
 
       <footer style={{ borderTop: "1px solid var(--line)", padding: 28, textAlign: "center", fontFamily: MONO, fontSize: 12, color: "var(--muted)" }}>{t.footer}</footer>
-
-      <div style={{ position: "fixed", bottom: 22, right: 22, zIndex: 55, display: "flex", alignItems: "center", gap: 3, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 999, padding: "6px 8px", boxShadow: "0 8px 30px rgba(26,26,21,0.13)" }}>
-        <span style={{ fontFamily: MONO, color: "var(--muted)", fontSize: 11, padding: "0 7px" }}>hero</span>
-        {switchBtn("terminal", "term")}
-        {switchBtn("editorial", "edit")}
-        {switchBtn("code", "code")}
-      </div>
     </div>
   );
 }
