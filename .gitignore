@@ -46,3 +46,6 @@ next-env.d.ts
 # SDD scratch + verification screenshots
 .superpowers/
 /*.png
+
+# local handoff / working notes (not for the public repo)
+/docs/HANDOFF.md
