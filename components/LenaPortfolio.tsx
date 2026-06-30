@@ -80,12 +80,18 @@ const I18N = {
     },
     work: { tag: "$ ls ~/projects", heading: "대표 프로젝트", sub: "직접 기획하고 배포해 실제로 쓰이는 서비스.", next: "다음 프로젝트 커밋 준비 중…" },
     proj: {
-      year: "2025 — 운영 중",
-      role: "기획 · 개발 · 배포",
-      title: "가온케어",
+      year: "2026 — 준비 중",
+      solo: "1인 개발",
+      title: "Gaon Care",
       subtitle: "학생회 우산 대여, 수기에서 디지털로.",
-      feat: ["키오스크", "대시보드", "재고 관리", "QR 라벨"],
-      desc: "대치중학교 학생회 「가온」의 우산 대여는 종이 장부로 관리되어 분실과 누락이 잦았습니다. 가온케어는 이 과정을 웹 서비스로 옮겨, 학생은 태블릿 키오스크에서 직접 빌리고 반납하고, 학생회는 백오피스에서 재고와 대여 현황을 한눈에 관리합니다.",
+      surfaces: [
+        { k: "FO", v: "학생 키오스크" },
+        { k: "BO", v: "학생회 대시보드" },
+      ],
+      feat: ["QR 대여·반납", "연체 자동 감지", "QR 라벨 출력"],
+      stack: "Next.js 16 · React 19 · TypeScript · Supabase · Tailwind",
+      builtWith: "Claude Design · Claude Code",
+      desc: "우산 QR을 찍고 5자리 학번만 누르면 대여, 반납은 QR만 다시 찍으면 끝. 학생회는 재고·대여 현황·3일 초과 연체를 한 화면에서 관리합니다.",
     },
     contact: { tag: "$ ./contact.sh", heading: "언제든 연락 주세요", body: "프로젝트 제안, 협업, 또는 그냥 궁금한 점이든 편하게 연락 주세요.", email: "lena@example.com", github: "github.com/lena", githubUrl: "https://github.com", insta: "@lena", instaUrl: "https://instagram.com", status: "새 프로젝트 · 협업 받는 중" },
     footer: "강인아 (Lena) · 직접 디자인하고 코딩함 · 2026",
@@ -103,12 +109,18 @@ const I18N = {
     },
     work: { tag: "$ ls ~/projects", heading: "Featured work", sub: "Services I designed, shipped, and people actually use.", next: "next project — committing soon…" },
     proj: {
-      year: "2025 — live",
-      role: "design · dev · deploy",
+      year: "2026 — in progress",
+      solo: "solo build",
       title: "Gaon Care",
       subtitle: "Student-council umbrella rental, from paper to digital.",
-      feat: ["Kiosk", "Dashboard", "Inventory", "QR labels"],
-      desc: "The umbrella rental run by Daechi Middle School’s student council “Gaon” was tracked on paper, so umbrellas went missing and records slipped. Gaon Care moves the whole flow onto the web: students borrow and return on a tablet kiosk, while the council manages stock and rentals from a back office.",
+      surfaces: [
+        { k: "FO", v: "student kiosk" },
+        { k: "BO", v: "council dashboard" },
+      ],
+      feat: ["QR rent / return", "Overdue alerts", "QR label print"],
+      stack: "Next.js 16 · React 19 · TypeScript · Supabase · Tailwind",
+      builtWith: "Claude Design · Claude Code",
+      desc: "Scan an umbrella's QR and tap a 5-digit student ID to rent; return is just one more scan. The council tracks stock, active rentals, and 3-day overdue items on one screen.",
     },
     contact: { tag: "$ ./contact.sh", heading: "Always open to a chat", body: "Project ideas, collaborations, or just a question — feel free to reach out.", email: "lena@example.com", github: "github.com/lena", githubUrl: "https://github.com", insta: "@lena", instaUrl: "https://instagram.com", status: "open to new projects & collabs" },
     footer: "강인아 (Lena) · designed & coded by me · 2026",
@@ -539,37 +551,58 @@ export default function LenaPortfolio() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <article className="lp-proj" data-reveal data-reveal-delay="100" style={{ ...reveal, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 20, overflow: "hidden", display: "flex", flexWrap: "wrap", boxShadow: "0 14px 50px rgba(26,26,21,0.05)" }}>
+            <article className="lp-proj" data-reveal data-reveal-delay="100" style={{ ...reveal, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 20, overflow: "hidden", display: "flex", flexWrap: "wrap", boxShadow: "0 20px 55px rgba(26,26,21,0.09)" }}>
               <div style={{ flex: "1 1 380px", background: "linear-gradient(140deg,#e8f1ec,#f4f2eb)", display: "flex", alignItems: "center", justifyContent: "center", padding: "clamp(20px,3vw,36px)", minHeight: 248 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/projects/gaon-care-hero.png" alt="가온케어 — 우산 대여·반납 서비스" loading="lazy" style={{ width: "100%", maxWidth: 440, height: "auto", display: "block" }} />
               </div>
-              <div style={{ flex: "1 1 360px", padding: "clamp(24px,3.4vw,38px)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 13 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 13, fontFamily: MONO, fontSize: 12 }}>
-                  <span style={{ color: "var(--accent)", fontWeight: 700 }}>01</span>
-                  <span style={{ color: "var(--muted)" }}>{t.proj.year}</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--accent)" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", animation: "dotpulse 2.4s infinite" }} />live
-                  </span>
+              <div style={{ flex: "1 1 400px", padding: "clamp(26px,3.4vw,40px)", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", gap: "clamp(12px,1.6vw,18px)", alignItems: "flex-start" }}>
+                  <div style={{ fontFamily: MONO, fontSize: "clamp(38px,5vw,54px)", fontWeight: 700, lineHeight: 0.82, color: "rgba(16,134,75,0.18)", flex: "none" }}>01</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                    <h3 style={{ fontSize: "clamp(32px,4.6vw,46px)", fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 0.95, margin: 0 }}>{t.proj.title}</h3>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 12, color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 999, padding: "4px 11px" }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#c8a93a" }} />{t.proj.year}
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 12, color: "var(--accent)", background: "var(--accent-soft)", borderRadius: 999, padding: "4px 12px", fontWeight: 600 }}>{t.proj.solo}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 11, flexWrap: "wrap" }}>
-                  <h3 style={{ fontSize: "clamp(26px,3.4vw,40px)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, margin: 0 }}>{t.proj.title}</h3>
-                  <span style={{ fontFamily: MONO, fontSize: 14, color: "var(--accent)" }}>gaon-care</span>
-                </div>
-                <p style={{ fontSize: "clamp(15px,1.5vw,17px)", fontWeight: 500, color: "var(--ink)", margin: 0, letterSpacing: "-0.01em" }}>{t.proj.subtitle}</p>
-                <p style={{ fontSize: 14.5, lineHeight: 1.65, color: "var(--muted)", margin: 0, maxWidth: "54ch", textWrap: "pretty" }}>{t.proj.desc}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7, fontFamily: MONO, fontSize: 12, marginTop: 2 }}>
-                  {t.proj.feat.map((f) => (
-                    <span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", border: "1px solid var(--line)", borderRadius: 8, background: "var(--paper)" }}>
-                      <span style={{ color: "var(--accent)" }}>▸</span>{f}
+
+                <p style={{ fontSize: "clamp(16px,1.6vw,18px)", fontWeight: 600, color: "var(--ink)", margin: "22px 0 0", letterSpacing: "-0.01em", lineHeight: 1.4 }}>{t.proj.subtitle}</p>
+
+                <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                  {t.proj.surfaces.map((s, i) => (
+                    <span key={s.k} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      {i > 0 && <span style={{ color: "var(--muted)", fontFamily: MONO }}>+</span>}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--paper)" }}>
+                        <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>{s.k}</span>
+                        <span style={{ fontSize: 13, color: "var(--ink)" }}>{s.v}</span>
+                      </span>
                     </span>
                   ))}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18, marginTop: 8, fontFamily: MONO, fontSize: 13 }}>
-                  <a className="lp-link" href="https://github.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 7, color: "var(--ink)", textDecoration: "none", borderBottom: "1px solid var(--line)", paddingBottom: 2 }}>
-                    GitHub <span style={{ color: "var(--accent)" }}>↗</span>
-                  </a>
-                  <span style={{ color: "var(--muted)" }}>{t.proj.role}</span>
+
+                <p style={{ fontSize: 14.5, lineHeight: 1.7, color: "var(--muted)", margin: "16px 0 0", maxWidth: "56ch", textWrap: "pretty" }}>{t.proj.desc}</p>
+
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px dashed var(--line)", display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", fontFamily: MONO, fontSize: 12.5, alignItems: "start" }}>
+                  <span style={{ color: "var(--accent)" }}>features</span>
+                  <span style={{ color: "var(--ink)" }}>{t.proj.feat.join(" · ")}</span>
+                  <span style={{ color: "var(--accent)" }}>stack</span>
+                  <span style={{ color: "var(--ink)" }}>{t.proj.stack}</span>
+                  <span style={{ color: "var(--accent)" }}>built with</span>
+                  <span style={{ color: "var(--ink)" }}>{t.proj.builtWith}</span>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginTop: 18, fontFamily: MONO, fontSize: 13 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7, color: "var(--muted)" }} aria-label="GitHub — 준비 중">
+                    <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                    GitHub
+                  </span>
+                  <span style={{ fontSize: 11, border: "1px solid var(--line)", borderRadius: 6, padding: "2px 7px", color: "var(--muted)" }}>준비 중</span>
                 </div>
               </div>
             </article>
