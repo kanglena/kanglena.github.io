@@ -93,7 +93,7 @@ const I18N = {
       builtWith: "Claude Design · Claude Code",
       desc: "우산 QR을 찍고 5자리 학번만 누르면 대여, 반납은 QR만 다시 찍으면 끝. 학생회는 재고·대여 현황·3일 초과 연체를 한 화면에서 관리합니다.",
     },
-    contact: { tag: "$ ./contact.sh", heading: "언제든 연락 주세요", body: "프로젝트 제안, 협업, 또는 그냥 궁금한 점이든 편하게 연락 주세요.", email: "lena@example.com", github: "github.com/lena", githubUrl: "https://github.com", insta: "@lena", instaUrl: "https://instagram.com", status: "새 프로젝트 · 협업 받는 중" },
+    contact: { tag: "$ ./contact.sh", heading: "공모전·대회, 같이 나가요", body: "공모전이나 대회 같이 나갈 사람, 협업하고 싶은 사람 찾고 있어요. 그냥 궁금한 것도 편하게 연락 주세요!", email: "lenakang0002@gmail.com", github: "github.com/kanglena", status: "공모전 · 협업 같이 할 사람 찾는 중" },
     footer: "강인아 (Lena) · 직접 디자인하고 코딩함 · 2026",
   },
   en: {
@@ -122,7 +122,7 @@ const I18N = {
       builtWith: "Claude Design · Claude Code",
       desc: "Scan an umbrella's QR and tap a 5-digit student ID to rent; return is just one more scan. The council tracks stock, active rentals, and 3-day overdue items on one screen.",
     },
-    contact: { tag: "$ ./contact.sh", heading: "Always open to a chat", body: "Project ideas, collaborations, or just a question — feel free to reach out.", email: "lena@example.com", github: "github.com/lena", githubUrl: "https://github.com", insta: "@lena", instaUrl: "https://instagram.com", status: "open to new projects & collabs" },
+    contact: { tag: "$ ./contact.sh", heading: "Let's team up", body: "Looking for people to enter contests and competitions with — collabs and questions welcome too. Reach out anytime!", email: "lenakang0002@gmail.com", github: "github.com/kanglena", status: "looking for contest & collab teammates" },
     footer: "강인아 (Lena) · designed & coded by me · 2026",
   },
 };
@@ -617,12 +617,12 @@ export default function LenaPortfolio() {
 
       <section id="contact" style={{ scrollMarginTop: 90, padding: "clamp(70px,10vw,130px) 28px clamp(50px,6vw,80px)", position: "relative" }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div data-reveal style={{ ...reveal, maxWidth: 640 }}>
+          <div data-reveal style={{ ...reveal, maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
             <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>{t.contact.tag}</div>
             <h2 style={{ fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1.05, margin: "14px 0 12px" }}>{t.contact.heading}</h2>
-            <p style={{ fontSize: "clamp(15px,1.6vw,18px)", color: "var(--muted)", margin: 0, maxWidth: "44ch" }}>{t.contact.body}</p>
+            <p style={{ fontSize: "clamp(15px,1.6vw,18px)", color: "var(--muted)", margin: "0 auto", maxWidth: "44ch" }}>{t.contact.body}</p>
           </div>
-          <div data-reveal data-reveal-delay="120" style={{ ...reveal, marginTop: "clamp(28px,4vw,42px)", maxWidth: 560, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", boxShadow: "0 14px 50px rgba(26,26,21,0.05)" }}>
+          <div data-reveal data-reveal-delay="120" style={{ ...reveal, margin: "clamp(28px,4vw,42px) auto 0", maxWidth: 560, background: "var(--card)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", boxShadow: "0 14px 50px rgba(26,26,21,0.05)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderBottom: "1px solid var(--line)", background: "rgba(26,26,21,0.018)", fontFamily: MONO, fontSize: 11.5, color: "var(--muted)" }}>
               <div style={{ display: "flex", gap: 6 }}>
                 <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#e5564b" }} />
@@ -641,11 +641,13 @@ export default function LenaPortfolio() {
                 <a className="lp-link" href={`mailto:${t.contact.email}`} style={{ color: "var(--ink)", textDecoration: "none" }}>{t.contact.email}</a>
                 <button ref={copyBtnRef} className="lp-copy" onClick={copyEmail} style={{ fontFamily: MONO, fontSize: 11.5, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--muted)", padding: "3px 11px", borderRadius: 7, cursor: "pointer", justifySelf: "end" }}>copy</button>
                 <span style={{ color: "var(--muted)" }}>github</span>
-                <a className="lp-link" href={t.contact.githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--ink)", textDecoration: "none" }}>{t.contact.github}</a>
-                <a href={t.contact.githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", justifySelf: "end" }}>↗</a>
-                <span style={{ color: "var(--muted)" }}>insta</span>
-                <a className="lp-link" href={t.contact.instaUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--ink)", textDecoration: "none" }}>{t.contact.insta}</a>
-                <a href={t.contact.instaUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", justifySelf: "end" }}>↗</a>
+                <span style={{ color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: 7 }}>
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                  </svg>
+                  {t.contact.github}
+                </span>
+                <span style={{ fontSize: 11, border: "1px solid var(--line)", borderRadius: 6, padding: "2px 7px", color: "var(--muted)", justifySelf: "end" }}>준비 중</span>
               </div>
               <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px dashed var(--line)", display: "flex", alignItems: "center", gap: 9, color: "var(--muted)", fontSize: 12.5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 0 3px var(--accent-soft)" }} />
