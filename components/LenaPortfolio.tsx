@@ -30,8 +30,8 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
       { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "대치중학교 2학년 — 학생 개발자" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: PROMPT, cmd: "ls ~/projects" },
-      { out: "가온케어/", accent: true },
+      { prompt: PROMPT, cmd: "work" },
+      { out: "가온케어", accent: true },
     ],
     edi: { kicker: "// 학생 개발자 · 대치중학교", name: "강인아", tag: "불편함을 코드로 푸는 사람." },
     code: [
@@ -51,8 +51,8 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
       { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "Daechi Middle School, grade 8 — student developer" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: PROMPT, cmd: "ls ~/projects" },
-      { out: "gaon-care/", accent: true },
+      { prompt: PROMPT, cmd: "work" },
+      { out: "gaon-care", accent: true },
     ],
     edi: { kicker: "// student developer · Daechi MS", name: "Lena", tag: "I turn friction into code." },
     code: [
