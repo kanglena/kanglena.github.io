@@ -30,8 +30,8 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
       { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "대치중학교 2학년 — 학생 개발자" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: PROMPT, cmd: "ls ~/projects" },
-      { out: "가온케어/", accent: true },
+      { prompt: PROMPT, cmd: "work" },
+      { out: "가온케어", accent: true },
     ],
     edi: { kicker: "// 학생 개발자 · 대치중학교", name: "강인아", tag: "불편함을 코드로 푸는 사람." },
     code: [
@@ -51,8 +51,8 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
       { prompt: PROMPT, cmd: "cat profile.txt" },
       { out: "Daechi Middle School, grade 8 — student developer" },
       { out: "stack: Python · JavaScript · AI" },
-      { prompt: PROMPT, cmd: "ls ~/projects" },
-      { out: "gaon-care/", accent: true },
+      { prompt: PROMPT, cmd: "work" },
+      { out: "gaon-care", accent: true },
     ],
     edi: { kicker: "// student developer · Daechi MS", name: "Lena", tag: "I turn friction into code." },
     code: [
@@ -105,8 +105,19 @@ const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profi
   },
 };
 
-// commands offered for tab/→ autocomplete in the docked terminal (one canonical name each)
-const DOCK_COMMANDS = ["about", "work", "contact", "home", "whoami", "cat profile.txt", "help", "clear"];
+// commands offered for tab/→ autocomplete in both terminals (one canonical name each)
+const COMMANDS = ["about", "work", "contact", "home", "whoami", "cat profile.txt", "help", "clear"];
+const commandSuggestion = (value: string): string => {
+  const v = value.toLowerCase();
+  if (!v.trim()) return "";
+  const m = COMMANDS.find((c) => c.startsWith(v) && c !== v);
+  return m ? m.slice(value.length) : "";
+};
+
+// hand keyboard focus between the hero terminal and the docked terminal, so a command that
+// scrolls to another section leaves you ready to type the next one without clicking
+const terminalRefs: { hero: HTMLInputElement | null } = { hero: null };
+let pendingDockFocus = false;
 
 type TermResult =
   | { type: "print"; lines: string[]; tone: "muted" | "ink" }
@@ -225,6 +236,15 @@ function TerminalDock({ lang }: { lang: Lang }) {
     setValue("");
   }, [lang]);
 
+  // when the dock appears because a hero command scrolled here, grab focus so typing continues
+  useEffect(() => {
+    if (visible && pendingDockFocus) {
+      pendingDockFocus = false;
+      const id = window.setTimeout(() => inputRef.current?.focus(), 90);
+      return () => clearTimeout(id);
+    }
+  }, [visible]);
+
   // each command replaces the last result — no growing scrollback; nav commands just move on
   const run = (raw: string) => {
     const res = interpretCommand(raw, lang);
@@ -233,15 +253,11 @@ function TerminalDock({ lang }: { lang: Lang }) {
     else if (res.type === "nav") {
       setOutput([]);
       document.getElementById(res.id)?.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", block: "start" });
+      if (res.id === "top") window.setTimeout(() => terminalRefs.hero?.focus(), prefersReduced() ? 0 : 420);
     } else setOutput([]);
   };
 
-  const suggestion = (() => {
-    const v = value.toLowerCase();
-    if (!v.trim()) return "";
-    const m = DOCK_COMMANDS.find((c) => c.startsWith(v) && c !== v);
-    return m ? m.slice(value.length) : "";
-  })();
+  const suggestion = commandSuggestion(value);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -335,7 +351,6 @@ export default function LenaPortfolio() {
   const heroTitleRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-  const copyBtnRef = useRef<HTMLButtonElement>(null);
 
   const t = I18N[lang];
 
@@ -515,7 +530,7 @@ export default function LenaPortfolio() {
 
       // ---- live input ----
       let inputEl: HTMLInputElement | null = null;
-      let live: { val: HTMLSpanElement; cur: HTMLElement } | null = null;
+      let live: { val: HTMLSpanElement; cur: HTMLElement; ghost: HTMLSpanElement } | null = null;
 
       const newPrompt = () => {
         const line = mkline();
@@ -526,10 +541,14 @@ export default function LenaPortfolio() {
         const val = document.createElement("span");
         val.style.color = "var(--ink)";
         const cur = makeCursor();
+        const ghost = document.createElement("span");
+        ghost.style.color = "var(--muted)";
+        ghost.style.opacity = "0.5";
         line.appendChild(p);
         line.appendChild(val);
         line.appendChild(cur);
-        live = { val, cur };
+        line.appendChild(ghost);
+        live = { val, cur, ghost };
         scrollBottom();
       };
 
@@ -538,6 +557,7 @@ export default function LenaPortfolio() {
       const onInput = () => {
         if (live && inputEl) {
           live.val.textContent = inputEl.value;
+          live.ghost.textContent = commandSuggestion(inputEl.value);
           scrollBottom();
         }
       };
@@ -557,18 +577,30 @@ export default function LenaPortfolio() {
           return;
         }
         if (res.type === "print") printLines(res.lines, res.tone === "ink" ? "var(--ink)" : "var(--muted)");
-        else if (res.type === "nav") navTo(res.id, res.msg);
-        else if (res.type === "notfound") printLines([notFoundMsg(res.raw, lang)], "var(--muted)");
+        else if (res.type === "nav") {
+          if (res.id !== "top") pendingDockFocus = true;
+          navTo(res.id, res.msg);
+        } else if (res.type === "notfound") printLines([notFoundMsg(res.raw, lang)], "var(--muted)");
         newPrompt();
       };
 
       const submit = (raw: string) => {
         if (!live) return;
         live.val.textContent = raw;
+        live.ghost.textContent = "";
         if (live.cur.parentNode) live.cur.parentNode.removeChild(live.cur);
         live = null;
         runCommand(raw);
         focusInput();
+      };
+
+      const acceptSuggestion = () => {
+        if (!inputEl) return;
+        const sug = commandSuggestion(inputEl.value);
+        if (sug) {
+          inputEl.value = inputEl.value + sug;
+          onInput();
+        }
       };
 
       const onKey = (e: KeyboardEvent) => {
@@ -577,6 +609,14 @@ export default function LenaPortfolio() {
           const v = inputEl ? inputEl.value : "";
           if (inputEl) inputEl.value = "";
           submit(v);
+        } else if (e.key === "Tab") {
+          e.preventDefault();
+          acceptSuggestion();
+        } else if (e.key === "ArrowRight" && inputEl && inputEl.selectionStart === inputEl.value.length && inputEl.selectionEnd === inputEl.value.length) {
+          if (commandSuggestion(inputEl.value)) {
+            e.preventDefault();
+            acceptSuggestion();
+          }
         }
       };
 
@@ -595,11 +635,13 @@ export default function LenaPortfolio() {
         box.appendChild(inputEl);
         inputEl.addEventListener("input", onInput);
         inputEl.addEventListener("keydown", onKey);
+        terminalRefs.hero = inputEl;
         box.style.cursor = "text";
         box.addEventListener("click", onBoxClick);
         teardownInteractive = () => {
           box.removeEventListener("click", onBoxClick);
           box.style.cursor = "";
+          terminalRefs.hero = null;
         };
         printLines([T.hint], "var(--muted)");
         newPrompt();
@@ -798,27 +840,6 @@ export default function LenaPortfolio() {
       timers.forEach((id) => clearTimeout(id));
     };
   }, [lang, hero]);
-
-  const copyEmail = async () => {
-    const b = copyBtnRef.current;
-    const done = (ok: boolean) => {
-      if (!b) return;
-      b.textContent = ok ? (lang === "ko" ? "복사됨!" : "copied!") : lang === "ko" ? "직접 복사하세요" : "select & copy";
-      b.style.color = ok ? "var(--accent-ink)" : "";
-      b.style.borderColor = ok ? "var(--accent)" : "";
-      setTimeout(() => {
-        b.textContent = "copy";
-        b.style.color = "";
-        b.style.borderColor = "";
-      }, 1500);
-    };
-    try {
-      await navigator.clipboard.writeText(I18N[lang].contact.email);
-      done(true);
-    } catch {
-      done(false);
-    }
-  };
 
   const reveal: React.CSSProperties = {
     opacity: 0,
@@ -1030,10 +1051,9 @@ export default function LenaPortfolio() {
                 <span style={{ color: "var(--accent-ink)", fontWeight: 600 }}>guest@lena</span>
                 <span style={{ color: "var(--muted)" }}> ~ % ./contact.sh</span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: "13px 16px", alignItems: "center" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "13px 16px", alignItems: "center" }}>
                 <span style={{ color: "var(--muted)" }}>email</span>
-                <a className="lp-link" href={`mailto:${t.contact.email}`} style={{ color: "var(--ink)", textDecoration: "none" }}>{t.contact.email}</a>
-                <button ref={copyBtnRef} className="lp-copy" type="button" aria-live="polite" aria-label={lang === "ko" ? "이메일 주소 복사" : "copy email address"} onClick={copyEmail} style={{ fontFamily: MONO, fontSize: 11.5, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--muted)", padding: "8px 12px", borderRadius: 7, cursor: "pointer", justifySelf: "end", minHeight: 34 }}>copy</button>
+                <span style={{ color: "var(--ink)" }}>{t.contact.email}</span>
                 <span style={{ color: "var(--muted)" }}>github</span>
                 <a className="lp-link" href={GITHUB_URL} target="_blank" rel="noopener noreferrer" style={{ color: "var(--ink)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 7, justifySelf: "start" }}>
                   <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -1041,7 +1061,6 @@ export default function LenaPortfolio() {
                   </svg>
                   {t.contact.github}
                 </a>
-                <span aria-hidden="true" />
               </div>
               <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px dashed var(--line)", display: "flex", alignItems: "center", gap: 9, color: "var(--muted)", fontSize: 12.5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 0 3px var(--accent-soft)" }} />
