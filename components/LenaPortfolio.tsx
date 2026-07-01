@@ -114,6 +114,11 @@ const commandSuggestion = (value: string): string => {
   return m ? m.slice(value.length) : "";
 };
 
+// hand keyboard focus between the hero terminal and the docked terminal, so a command that
+// scrolls to another section leaves you ready to type the next one without clicking
+const terminalRefs: { hero: HTMLInputElement | null } = { hero: null };
+let pendingDockFocus = false;
+
 type TermResult =
   | { type: "print"; lines: string[]; tone: "muted" | "ink" }
   | { type: "nav"; id: string; msg: string }
@@ -231,6 +236,15 @@ function TerminalDock({ lang }: { lang: Lang }) {
     setValue("");
   }, [lang]);
 
+  // when the dock appears because a hero command scrolled here, grab focus so typing continues
+  useEffect(() => {
+    if (visible && pendingDockFocus) {
+      pendingDockFocus = false;
+      const id = window.setTimeout(() => inputRef.current?.focus(), 90);
+      return () => clearTimeout(id);
+    }
+  }, [visible]);
+
   // each command replaces the last result — no growing scrollback; nav commands just move on
   const run = (raw: string) => {
     const res = interpretCommand(raw, lang);
@@ -239,6 +253,7 @@ function TerminalDock({ lang }: { lang: Lang }) {
     else if (res.type === "nav") {
       setOutput([]);
       document.getElementById(res.id)?.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", block: "start" });
+      if (res.id === "top") window.setTimeout(() => terminalRefs.hero?.focus(), prefersReduced() ? 0 : 420);
     } else setOutput([]);
   };
 
@@ -562,8 +577,10 @@ export default function LenaPortfolio() {
           return;
         }
         if (res.type === "print") printLines(res.lines, res.tone === "ink" ? "var(--ink)" : "var(--muted)");
-        else if (res.type === "nav") navTo(res.id, res.msg);
-        else if (res.type === "notfound") printLines([notFoundMsg(res.raw, lang)], "var(--muted)");
+        else if (res.type === "nav") {
+          if (res.id !== "top") pendingDockFocus = true;
+          navTo(res.id, res.msg);
+        } else if (res.type === "notfound") printLines([notFoundMsg(res.raw, lang)], "var(--muted)");
         newPrompt();
       };
 
@@ -618,11 +635,13 @@ export default function LenaPortfolio() {
         box.appendChild(inputEl);
         inputEl.addEventListener("input", onInput);
         inputEl.addEventListener("keydown", onKey);
+        terminalRefs.hero = inputEl;
         box.style.cursor = "text";
         box.addEventListener("click", onBoxClick);
         teardownInteractive = () => {
           box.removeEventListener("click", onBoxClick);
           box.style.cursor = "";
+          terminalRefs.hero = null;
         };
         printLines([T.hint], "var(--muted)");
         newPrompt();
