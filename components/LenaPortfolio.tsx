@@ -68,7 +68,7 @@ const heroData: Record<Lang, { terminal: TermStep[]; edi: { kicker: string; name
 };
 
 // interactive-terminal copy (commands a visitor can actually type)
-const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profile: string[]; go: Record<"about" | "work" | "contact", string>; inputLabel: string }> = {
+const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profile: string[]; go: Record<"about" | "work" | "contact" | "home", string>; inputLabel: string }> = {
   ko: {
     hint: "# 직접 입력해보세요 — 'help' 치고 Enter ↵",
     help: [
@@ -78,11 +78,12 @@ const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profi
       "  about             소개 섹션으로 이동",
       "  work              프로젝트 섹션으로 이동",
       "  contact           연락처 섹션으로 이동",
+      "  home              맨 위로 이동",
       "  clear             화면 지우기",
     ],
     whoami: ["강인아 · Lena"],
     profile: ["대치중학교 2학년 — 학생 개발자", "stack: Python · JavaScript · AI"],
-    go: { about: "→ 소개로 이동합니다…", work: "→ 프로젝트로 이동합니다…", contact: "→ 연락처로 이동합니다…" },
+    go: { about: "→ 소개로 이동합니다…", work: "→ 프로젝트로 이동합니다…", contact: "→ 연락처로 이동합니다…", home: "→ 맨 위로 이동합니다…" },
     inputLabel: "터미널 명령어 입력",
   },
   en: {
@@ -94,14 +95,47 @@ const TERM: Record<Lang, { hint: string; help: string[]; whoami: string[]; profi
       "  about             jump to the about section",
       "  work              jump to the work section",
       "  contact           jump to the contact section",
+      "  home              back to the top",
       "  clear             clear the screen",
     ],
     whoami: ["강인아 · Lena"],
     profile: ["Daechi Middle School, grade 8 — student developer", "stack: Python · JavaScript · AI"],
-    go: { about: "→ opening about…", work: "→ opening work…", contact: "→ opening contact…" },
+    go: { about: "→ opening about…", work: "→ opening work…", contact: "→ opening contact…", home: "→ back to top…" },
     inputLabel: "terminal command input",
   },
 };
+
+// commands offered for tab/→ autocomplete in the docked terminal (one canonical name each)
+const DOCK_COMMANDS = ["about", "work", "contact", "home", "whoami", "cat profile.txt", "help", "clear"];
+
+type TermResult =
+  | { type: "print"; lines: string[]; tone: "muted" | "ink" }
+  | { type: "nav"; id: string; msg: string }
+  | { type: "clear" }
+  | { type: "noop" }
+  | { type: "notfound"; raw: string };
+
+const prefersReduced = () =>
+  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const notFoundMsg = (raw: string, lang: Lang) =>
+  lang === "ko" ? `command not found: ${raw} — 'help' 입력` : `command not found: ${raw} — type 'help'`;
+
+// shared command engine — used by both the hero terminal and the docked terminal
+function interpretCommand(raw: string, lang: Lang): TermResult {
+  const T = TERM[lang];
+  const cmd = raw.trim().toLowerCase();
+  if (cmd === "") return { type: "noop" };
+  if (cmd === "clear" || cmd === "cls") return { type: "clear" };
+  if (cmd === "help" || cmd === "?" || cmd === "ls -a") return { type: "print", lines: T.help, tone: "muted" };
+  if (cmd === "whoami") return { type: "print", lines: T.whoami, tone: "ink" };
+  if (cmd === "cat profile.txt" || cmd === "profile" || cmd === "cat profile") return { type: "print", lines: T.profile, tone: "muted" };
+  if (["about", "cd about", "open about", "cat about.md"].includes(cmd)) return { type: "nav", id: "about", msg: T.go.about };
+  if (["work", "projects", "ls", "ls ~/projects", "cd work", "cd ~/projects", "open work"].includes(cmd)) return { type: "nav", id: "work", msg: T.go.work };
+  if (["contact", "cd contact", "open contact", "./contact.sh", "cat contact"].includes(cmd)) return { type: "nav", id: "contact", msg: T.go.contact };
+  if (["home", "top", "cd", "cd ~", "cd ~/"].includes(cmd)) return { type: "nav", id: "top", msg: T.go.home };
+  return { type: "notfound", raw: raw.trim() };
+}
 
 const I18N = {
   ko: {
@@ -168,6 +202,129 @@ const I18N = {
 
 const GITHUB_URL = "https://github.com/kanglena";
 const SKILLS = ["Python", "JavaScript", "AI", "HTML / CSS", "React", "Web Deploy", "Kiosk UX", "Back-office"];
+
+// docked terminal — appears at the bottom once the hero scrolls out of view,
+// so section navigation via commands stays available anywhere on the page
+function TerminalDock({ lang }: { lang: Lang }) {
+  const [visible, setVisible] = useState(false);
+  const [output, setOutput] = useState<{ text: string; tone: "muted" | "ink" | "accent" }[]>([]);
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const T = TERM[lang];
+
+  useEffect(() => {
+    const hero = document.getElementById("top");
+    if (!hero || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((es) => setVisible(!es[0].isIntersecting), { rootMargin: "-45% 0px 0px 0px" });
+    io.observe(hero);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setOutput([]);
+    setValue("");
+  }, [lang]);
+
+  // each command replaces the last result — no growing scrollback; nav commands just move on
+  const run = (raw: string) => {
+    const res = interpretCommand(raw, lang);
+    if (res.type === "print") setOutput(res.lines.map((tx) => ({ text: tx, tone: res.tone })));
+    else if (res.type === "notfound") setOutput([{ text: notFoundMsg(res.raw, lang), tone: "muted" }]);
+    else if (res.type === "nav") {
+      setOutput([]);
+      document.getElementById(res.id)?.scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth", block: "start" });
+    } else setOutput([]);
+  };
+
+  const suggestion = (() => {
+    const v = value.toLowerCase();
+    if (!v.trim()) return "";
+    const m = DOCK_COMMANDS.find((c) => c.startsWith(v) && c !== v);
+    return m ? m.slice(value.length) : "";
+  })();
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const v = value;
+      setValue("");
+      run(v);
+    } else if (e.key === "Tab" && suggestion) {
+      e.preventDefault();
+      setValue(value + suggestion);
+    } else if (e.key === "ArrowRight" && suggestion) {
+      const el = e.currentTarget;
+      if (el.selectionStart === value.length && el.selectionEnd === value.length) {
+        e.preventDefault();
+        setValue(value + suggestion);
+      }
+    }
+  };
+
+  const toneColor = (tone: string) => (tone === "ink" ? "var(--ink)" : tone === "accent" ? "var(--accent-ink)" : "var(--muted)");
+
+  return (
+    <div
+      aria-hidden={!visible}
+      style={{
+        position: "fixed",
+        left: "50%",
+        bottom: 20,
+        zIndex: 55,
+        width: "min(468px, 92vw)",
+        transform: visible ? "translate(-50%,0)" : "translate(-50%,16px)",
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+        transition: prefersReduced() ? "none" : "opacity .3s ease, transform .3s ease",
+      }}
+    >
+      <div
+        onMouseDown={(e) => {
+          if (e.target !== inputRef.current) inputRef.current?.focus();
+        }}
+        style={{ background: "var(--card)", border: "1px solid rgba(26,26,21,0.16)", borderRadius: 12, boxShadow: "0 12px 34px rgba(26,26,21,0.16)", overflow: "hidden", cursor: "text" }}
+      >
+        {output.length > 0 && (
+          <div style={{ maxHeight: "min(220px,38vh)", overflowY: "auto", padding: "12px 14px 0", fontFamily: MONO, fontSize: 13.5, lineHeight: 1.7 }}>
+            {output.map((ln, i) => (
+              <div key={i} style={{ color: toneColor(ln.tone), whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{ln.text}</div>
+            ))}
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 14px 12px", fontFamily: MONO, fontSize: 13.5 }}>
+          <span style={{ display: "flex", gap: 6, flex: "none" }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#e5564b" }} />
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#e8b23a" }} />
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#3bb665" }} />
+          </span>
+          <span style={{ color: "var(--accent-ink)", fontWeight: 600, whiteSpace: "pre", flex: "none" }}>{PROMPT} </span>
+          <div style={{ position: "relative", flex: 1, minWidth: 0, height: "1.4em" }}>
+            <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", whiteSpace: "pre", pointerEvents: "none", overflow: "hidden", fontFamily: MONO, fontSize: 13.5 }}>
+              <span style={{ color: "transparent" }}>{value}</span>
+              <span style={{ color: "var(--muted)", opacity: 0.5 }}>{suggestion}</span>
+            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="work · contact · help"
+              aria-label={T.inputLabel}
+              className="lp-dock-input"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              tabIndex={visible ? 0 : -1}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "transparent", border: 0, outline: "none", padding: 0, margin: 0, fontFamily: MONO, fontSize: 13.5, color: "var(--ink)", caretColor: "var(--accent)" }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LenaPortfolio() {
   const [lang, setLang] = useState<Lang>("ko");
@@ -392,24 +549,16 @@ export default function LenaPortfolio() {
       };
 
       const runCommand = (raw: string) => {
-        const cmd = raw.trim().toLowerCase();
-        if (cmd === "clear" || cmd === "cls") {
+        const res = interpretCommand(raw, lang);
+        if (res.type === "clear") {
           box.innerHTML = "";
           if (inputEl) box.appendChild(inputEl);
           newPrompt();
           return;
         }
-        if (cmd === "") {
-          newPrompt();
-          return;
-        }
-        if (cmd === "help" || cmd === "?" || cmd === "ls -a") printLines(T.help, "var(--muted)");
-        else if (cmd === "whoami") printLines(T.whoami, "var(--ink)");
-        else if (cmd === "cat profile.txt" || cmd === "profile" || cmd === "cat profile") printLines(T.profile, "var(--muted)");
-        else if (["about", "cd about", "open about", "cat about.md"].includes(cmd)) navTo("about", T.go.about);
-        else if (["work", "projects", "ls", "ls ~/projects", "cd work", "cd ~/projects", "open work"].includes(cmd)) navTo("work", T.go.work);
-        else if (["contact", "cd contact", "open contact", "./contact.sh", "cat contact"].includes(cmd)) navTo("contact", T.go.contact);
-        else printLines([lang === "ko" ? `command not found: ${raw.trim()} — 'help' 입력` : `command not found: ${raw.trim()} — type 'help'`], "var(--muted)");
+        if (res.type === "print") printLines(res.lines, res.tone === "ink" ? "var(--ink)" : "var(--muted)");
+        else if (res.type === "nav") navTo(res.id, res.msg);
+        else if (res.type === "notfound") printLines([notFoundMsg(res.raw, lang)], "var(--muted)");
         newPrompt();
       };
 
@@ -908,6 +1057,8 @@ export default function LenaPortfolio() {
       </section>
 
       <footer style={{ borderTop: "1px solid var(--line)", padding: 28, textAlign: "center", fontFamily: MONO, fontSize: 12, color: "var(--muted)" }}>{t.footer}</footer>
+
+      <TerminalDock lang={lang} />
     </div>
   );
 }
