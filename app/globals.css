@@ -59,8 +59,6 @@ body {
 .lp-proj:hover { box-shadow: 0 26px 64px rgba(26, 26, 21, 0.1); border-color: rgba(16, 134, 75, 0.45); }
 .lp-link { transition: color 0.2s, border-color 0.2s; }
 .lp-link:hover { color: var(--accent-ink); border-color: var(--accent); }
-.lp-copy { transition: all 0.2s; }
-.lp-copy:hover { border-color: var(--accent); color: var(--accent-ink); }
 .lp-dock-input::placeholder { color: var(--muted); opacity: 0.7; }
 
 /* visible keyboard focus (inline styles don't set outline, so this wins) */
