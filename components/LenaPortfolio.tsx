@@ -154,10 +154,10 @@ const I18N = {
     hero: { hint: "아래로 스크롤" },
     about: {
       tag: "$ cat about.md",
-      heading: "코드로 학교의 불편을 푸는 학생 개발자",
-      p1: "대치중학교 2학년 강인아(Lena)입니다. 학생회 활동을 하며 마주친 진짜 불편함을, 직접 만든 서비스로 풀어내는 걸 좋아합니다.",
-      p2: "Python과 JavaScript를 주력으로 쓰고, 필요한 곳에는 AI를 얹어 더 똑똑한 경험을 만듭니다. 기획부터 배포, 운영까지 끝까지 끌고 가는 걸 즐깁니다.",
-      stat: { statusK: "status", statusV: "프로젝트 빌드 중", locK: "location", locV: "서울 · 대치중", focusK: "focus", focusV: "web · kiosk · AI" },
+      heading: "필요한 걸 직접 만드는 학생 개발자",
+      p1: "대치중학교 2학년 강인아(Lena)입니다. 학생회에서 종이 대장으로 하던 우산 대여를, QR로 빌리고 반납하는 앱 '가온케어'로 직접 만들고 있어요.",
+      p2: "주로 Python과 JavaScript로 개발하고, AI도 다룹니다. 학생용 키오스크부터 학생회용 대시보드까지, 기획하고 만들어서 배포까지 혼자 합니다.",
+      stat: { statusK: "status", statusV: "가온케어 만드는 중", locK: "location", locV: "서울 · 대치중", focusK: "focus", focusV: "web · kiosk · AI" },
       skillsLabel: "// 기술 스택",
     },
     work: { tag: "$ ls ~/projects", heading: "대표 프로젝트", sub: "기획부터 개발까지 직접 끌고 간 프로젝트.", next: "다음 프로젝트 커밋 준비 중…" },
@@ -184,10 +184,10 @@ const I18N = {
     hero: { hint: "scroll down" },
     about: {
       tag: "$ cat about.md",
-      heading: "A student developer solving school problems with code",
-      p1: "I’m Lena (강인아), an 8th grader at Daechi Middle School. I love turning the real friction I run into through student-council work into services I build myself.",
-      p2: "I work mainly in Python and JavaScript, adding AI where it makes the experience smarter. I enjoy taking a project all the way — from idea to deployment to keeping it running.",
-      stat: { statusK: "status", statusV: "building projects", locK: "location", locV: "Seoul · Daechi MS", focusK: "focus", focusV: "web · kiosk · AI" },
+      heading: "A student developer who builds what she needs",
+      p1: "I’m Lena (강인아), an 8th grader at Daechi Middle School. I’m building Gaon Care, an app that replaces the student council’s paper umbrella logbook with QR check-out and return.",
+      p2: "I mostly build in Python and JavaScript, and I work with AI too. From the student kiosk to the council dashboard, I do it all myself — planning, building, and deploying.",
+      stat: { statusK: "status", statusV: "building Gaon Care", locK: "location", locV: "Seoul · Daechi MS", focusK: "focus", focusV: "web · kiosk · AI" },
       skillsLabel: "// tech stack",
     },
     work: { tag: "$ ls ~/projects", heading: "Featured work", sub: "A service I designed and built end-to-end for student council.", next: "next project — committing soon…" },
@@ -212,7 +212,7 @@ const I18N = {
 };
 
 const GITHUB_URL = "https://github.com/kanglena";
-const SKILLS = ["Python", "JavaScript", "AI", "HTML / CSS", "React", "Web Deploy", "Kiosk UX", "Back-office"];
+const SKILLS = ["Python", "JavaScript", "AI", "React", "TypeScript", "Next.js", "Supabase"];
 
 // docked terminal — appears at the bottom once the hero scrolls out of view,
 // so section navigation via commands stays available anywhere on the page
